@@ -1,0 +1,7 @@
+{
+  "name": "SubAura: Animated Subtitle Generator",
+  "description": "A free, browser-based real-time subtitle overlay application for live streamers. It captures microphone audio, transcribes it word-by-word using Google's Gemini API, and displays Netflix-style subtitles as a transparent overlay for OBS.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
