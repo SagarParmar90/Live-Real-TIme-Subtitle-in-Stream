@@ -25,6 +25,12 @@ const DisplayPage: React.FC = () => {
   const wordQueueRef = useRef<string[]>([]);
   const isProcessingRef = useRef<boolean>(false);
   
+  // Set page background to transparent for OBS
+  useEffect(() => {
+    document.documentElement.style.background = 'transparent';
+    document.body.style.background = 'transparent';
+  }, []);
+
   useEffect(() => {
     if (!streamId) return;
     
@@ -86,26 +92,24 @@ const DisplayPage: React.FC = () => {
     backgroundColor: `rgba(${parseInt(bgColor.slice(0, 2), 16)}, ${parseInt(bgColor.slice(2, 4), 16)}, ${parseInt(bgColor.slice(4, 6), 16)}, ${bgOpacity})`,
   };
 
-  if (words.length === 0) {
-    return <div className="bg-transparent" />;
-  }
-
   return (
     <div className="bg-transparent w-full h-full overflow-hidden">
-      <div 
-        className="absolute left-1/2 w-max max-w-[90vw] flex justify-center items-center gap-2 p-4"
-        style={positionStyles}
-      >
-        {words.map((wordObj) => (
-          <span
-            key={wordObj.id}
-            className="px-4 py-2 rounded-md font-bold whitespace-nowrap animate-fadeIn"
-            style={wordStyle}
-          >
-            {wordObj.word}
-          </span>
-        ))}
-      </div>
+      {words.length > 0 && (
+        <div 
+          className="absolute left-1/2 w-max max-w-[90vw] flex justify-center items-center gap-2 p-4"
+          style={positionStyles}
+        >
+          {words.map((wordObj) => (
+            <span
+              key={wordObj.id}
+              className="px-4 py-2 rounded-md font-bold whitespace-nowrap animate-fadeIn"
+              style={wordStyle}
+            >
+              {wordObj.word}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
