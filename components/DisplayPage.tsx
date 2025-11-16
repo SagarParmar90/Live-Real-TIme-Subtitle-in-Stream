@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { SubtitleWord, BroadcastMessage } from '../types';
@@ -60,7 +59,8 @@ const DisplayPage: React.FC = () => {
         }, fadeDuration);
       }
       
-      setTimeout(processQueue, 150); // Delay between showing words
+      // Reduced delay for faster word display
+      setTimeout(processQueue, 100);
     };
 
     channel.onmessage = (event: MessageEvent<BroadcastMessage>) => {

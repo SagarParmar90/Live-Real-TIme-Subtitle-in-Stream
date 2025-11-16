@@ -11,6 +11,7 @@ const ControlPage: React.FC = () => {
   const { streamId } = useParams<{ streamId: string }>();
   const [status, setStatus] = useState<ConnectionStatus>(ConnectionStatus.DISCONNECTED);
   const [error, setError] = useState<string | null>(null);
+  const [language, setLanguage] = useState<string>('multi');
 
   const sessionPromiseRef = useRef<Promise<LiveSession> | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -47,6 +48,22 @@ const ControlPage: React.FC = () => {
         broadcastChannelRef.current = new BroadcastChannel(streamId);
     }
     
+    let systemInstruction = '';
+    switch (language) {
+      case 'en':
+        systemInstruction = 'You are a real-time transcription system. Transcribe English speech accurately. Return only the transcribed text.';
+        break;
+      case 'hi':
+        systemInstruction = 'You are a real-time transcription system. Transcribe Hindi speech accurately. Return only the transcribed text in Devanagari script.';
+        break;
+      case 'gu':
+        systemInstruction = 'You are a real-time transcription system. Transcribe Gujarati speech accurately. Return only the transcribed text in Gujarati script.';
+        break;
+      case 'multi':
+      default:
+        systemInstruction = 'You are a real-time transcription system for Indian multilingual content. Detect and transcribe Hindi, Gujarati, and English speech accurately. Handle code-mixing naturally. Return only transcribed text.';
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
@@ -57,14 +74,15 @@ const ControlPage: React.FC = () => {
         config: {
           responseModalities: [Modality.AUDIO],
           inputAudioTranscription: {},
-          systemInstruction: 'You are a real-time transcription system for Indian multilingual content. Detect and transcribe Hindi, Gujarati, and English speech accurately. Handle code-mixing naturally. Return only transcribed text with word-level timestamps.',
+          systemInstruction: systemInstruction,
         },
         callbacks: {
             onopen: () => {
                 setStatus(ConnectionStatus.CONNECTED);
                 audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
                 const source = audioContextRef.current.createMediaStreamSource(stream);
-                scriptProcessorRef.current = audioContextRef.current.createScriptProcessor(4096, 1, 1);
+                // Reduced buffer size for lower latency
+                scriptProcessorRef.current = audioContextRef.current.createScriptProcessor(2048, 1, 1);
         
                 scriptProcessorRef.current.onaudioprocess = (audioProcessingEvent) => {
                     setStatus(ConnectionStatus.STREAMING);
@@ -116,7 +134,7 @@ const ControlPage: React.FC = () => {
         }
         setStatus(ConnectionStatus.ERROR);
     }
-  }, [streamId, stopStreaming]);
+  }, [streamId, stopStreaming, language]);
 
   useEffect(() => {
     return () => {
@@ -141,10 +159,27 @@ const ControlPage: React.FC = () => {
         
         <div className="bg-slate-800 p-6 rounded-lg shadow-lg">
             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                <StatusIndicator status={status} />
+                <div className="flex flex-col sm:flex-row items-center gap-6 w-full md:w-auto">
+                  <StatusIndicator status={status} />
+                  <div className="relative w-full sm:w-auto">
+                      <label htmlFor="language-select" className="sr-only">Choose Language</label>
+                      <select
+                          id="language-select"
+                          value={language}
+                          onChange={(e) => setLanguage(e.target.value)}
+                          disabled={isStreaming}
+                          className="bg-slate-700 border border-slate-600 text-white text-md rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                          <option value="multi">Multilingual (Hinglish)</option>
+                          <option value="en">English</option>
+                          <option value="hi">Hindi (हिन्दी)</option>
+                          <option value="gu">Gujarati (ગુજરાતી)</option>
+                      </select>
+                  </div>
+                </div>
                 <button
                     onClick={isStreaming ? stopStreaming : startStreaming}
-                    className={`flex items-center gap-3 text-lg font-semibold px-6 py-3 rounded-lg transition-all duration-300 ${
+                    className={`flex items-center justify-center gap-3 text-lg font-semibold px-6 py-3 rounded-lg transition-all duration-300 w-full sm:w-auto ${
                         isStreaming 
                         ? 'bg-red-600 hover:bg-red-700 text-white' 
                         : 'bg-green-600 hover:bg-green-700 text-white'
